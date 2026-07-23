@@ -12,6 +12,7 @@ from .core import judge
 def play(digits=3):
     # ===== ① 開始時に足す（難易度・あいさつ など）: ここに書く =====
     from .difficulty import choose_length
+    from .history import GuessResult, format_history
     from .mode import choose_mode, make_mode_secret, mode_description
     from .time_limit import GameTimer, choose_time_limit
 
@@ -24,6 +25,7 @@ def play(digits=3):
     print(f"Hit & Blow（{mode_description(mode, length)}）")
 
     tries = 0
+    history: list[GuessResult] = []
     while True:
         # ===== ② 入力コマンドに足す（ヒント など）: ここに書く（import もここに） =====
         # 例:  from .hint import hint
@@ -46,7 +48,8 @@ def play(digits=3):
 
         tries += 1
         hit, blow = judge(secret, guess)
-        print(f"  Hit={hit}  Blow={blow}")
+        history.append(GuessResult(guess, hit, blow))
+        print(format_history(history))
         if hit == length:
 
             # ===== ③ 勝利時に足す（スコア・履歴 など）: ここに書く =====
