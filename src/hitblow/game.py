@@ -11,6 +11,7 @@ from .core import judge
 
 def play(digits=3):
     # ===== ① 開始時に足す（難易度・あいさつ など）: ここに書く =====
+    from .continuous import ContinuousSession
     from .difficulty import choose_length
     from .history import GuessResult, format_history
     from .mode import choose_mode, make_mode_secret, mode_description
@@ -18,11 +19,18 @@ def play(digits=3):
 
     mode = choose_mode()
     length = choose_length(mode, default=digits)
-    time_limit = choose_time_limit()
+    continuous_session = ContinuousSession() if mode == "continuous" else None
+    time_limit = (
+        continuous_session.time_limit
+        if continuous_session is not None
+        else choose_time_limit()
+    )
     secret = make_mode_secret(mode, length)
     timer = GameTimer(time_limit)
 
     print(f"Hit & Blow（{mode_description(mode, length)}）")
+    if continuous_session is not None:
+        print(f"第1問（制限時間 {continuous_session.time_limit} 秒）")
 
     tries = 0
     history: list[GuessResult] = []
@@ -38,6 +46,8 @@ def play(digits=3):
             guess = timed_input("予想 > ", timer.remaining())
         except TimeoutError:
             print(f"時間切れ！ 答えは {secret} でした")
+            if continuous_session is not None:
+                print(f"最終スコア: {continuous_session.score} 問")
             return
 
         guess = normalize_guess(mode, guess)
@@ -56,4 +66,17 @@ def play(digits=3):
             print(f"経過時間: {timer.elapsed():.1f} 秒")
 
             print(f"正解！ {tries} 回で当たり（答え {secret}）")
-            break
+            if continuous_session is None:
+                break
+
+            continuous_session.record_clear()
+            print(f"現在のスコア: {continuous_session.score} 問")
+
+            secret = make_mode_secret(mode, length)
+            timer = GameTimer(continuous_session.time_limit)
+            tries = 0
+            history = []
+            print(
+                f"\n第{continuous_session.score + 1}問"
+                f"（制限時間 {continuous_session.time_limit} 秒）"
+            )

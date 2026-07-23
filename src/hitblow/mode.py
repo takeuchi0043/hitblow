@@ -10,7 +10,7 @@ import random
 from dataclasses import dataclass
 from typing import Callable, Literal, Protocol
 
-ModeName = Literal["number", "word", "symbol"]
+ModeName = Literal["number", "word", "symbol", "continuous"]
 
 
 class RandomSource(Protocol):
@@ -43,15 +43,18 @@ MODES: dict[ModeName, ModeSpec] = {
     "number": ModeSpec("number", "数字", tuple(range(3, 11))),
     "word": ModeSpec("word", "英単語", tuple(WORDS)),
     "symbol": ModeSpec("symbol", "記号", tuple(range(3, 9))),
+    "continuous": ModeSpec("continuous", "連続", tuple(range(3, 11))),
 }
 
 MENU_TO_MODE: dict[str, ModeName] = {
     "1": "number",
     "2": "word",
     "3": "symbol",
+    "4": "continuous",
     "number": "number",
     "word": "word",
     "symbol": "symbol",
+    "continuous": "continuous",
 }
 
 
@@ -62,14 +65,14 @@ def choose_mode(
     """プレイヤーにモードを選ばせる。空入力なら数字モード。"""
 
     output_fn("モードを選んでください")
-    output_fn("  1: 数字  2: 意味のある英単語  3: 記号")
+    output_fn("  1: 数字  2: 意味のある英単語  3: 記号  4: 連続")
 
     while True:
         answer = input_fn("モード [1] > ").strip().lower() or "1"
         mode = MENU_TO_MODE.get(answer)
         if mode is not None:
             return mode
-        output_fn("1、2、3 のどれかを入力してね")
+        output_fn("1、2、3、4 のどれかを入力してね")
 
 
 def available_lengths(mode: ModeName) -> tuple[int, ...]:
@@ -90,7 +93,7 @@ def make_mode_secret(
 
     source = rng if rng is not None else random
 
-    if mode == "number":
+    if mode in {"number", "continuous"}:
         return "".join(source.sample(NUMBER_ALPHABET, length))
     if mode == "word":
         return source.choice(WORDS[length])
@@ -110,7 +113,7 @@ def validate_guess(mode: ModeName, guess: str, length: int) -> str | None:
     if len(guess) != length:
         return f"{length} 文字で入力してね"
 
-    if mode == "number":
+    if mode in {"number", "continuous"}:
         if not guess.isascii() or not guess.isdigit():
             return "数字だけで入力してね"
         if len(set(guess)) != length:
@@ -134,6 +137,8 @@ def mode_description(mode: ModeName, length: int) -> str:
 
     if mode == "number":
         return f"数字モード（{length}桁・重複なし）"
+    if mode == "continuous":
+        return f"連続モード（数字{length}桁・各問120秒から10秒ずつ短縮）"
     if mode == "word":
         return f"英単語モード（{length}文字・答えは意味のある英単語）"
     return f"記号モード（{length}文字・重複なし・使用可能: {SYMBOL_ALPHABET}）"
