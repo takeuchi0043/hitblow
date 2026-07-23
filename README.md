@@ -1,3 +1,6 @@
+# アピール
+４つのモードと難易度が選べる Hit & Blow
+
 # hitblow（チームで育てる Hit & Blow）
 
 第2回のチーム開発のスタート地点。**最初から遊べる**：
@@ -33,7 +36,11 @@ tests/test_core.py
 
 ## 追加した機能（各ペアが1行ずつ足す）
 
--
+- 制限時間 `time_limit.py`
+- 数字・単語・記号モード `mode.py`
+- ゲームの文字数を選ぶ `difficulty.py`
+- 履歴表示 `history.py`
+- 連続モード `continuous.py`
 
 ## 進め方
 - 仕様を書く → **AI に実装させる**（コースサイトの「AI の使い方」参照）→ 遊んで確認＋`uv run pytest`。
